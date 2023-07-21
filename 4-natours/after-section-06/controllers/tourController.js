@@ -76,12 +76,39 @@ exports.createTour = (req, res) => {
 };
 
 exports.updateTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: '<Updated tour here...>'
+  const id = req.params.id * 1;
+  const toUpdateTourIndex = tours.findIndex(tour => tour.id === id);
+
+  if(toUpdateTourIndex !== -1) {
+    for (let prop in req.body) {
+      if(tours[toUpdateTourIndex].hasOwnProperty(prop)) {
+        tours[toUpdateTourIndex][prop] = req.body[prop];
+      } else {
+        return res.status(500).json({
+          status: 'invalid property or properties',
+          message: `invalid property: ${prop}`,
+        });
+      }
     }
-  });
+
+    fs.writeFile(simpleToursPath, JSON.stringify(tours), (err) => {
+      if (err)
+        return res.status(500).json({
+          status: 'failed',
+          message: err,
+        });
+    });
+
+    return res.status(200).json({
+      status: "success",
+      data: tours[toUpdateTourIndex],
+    })
+  } else {
+    return res.status(500).json({
+      status: 'failed',
+      message: 'invalid id',
+    });
+  }
 };
 
 exports.deleteTour = (req, res) => {
